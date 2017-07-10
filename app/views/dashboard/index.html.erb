@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<style media="screen">
+
+html,body {
+  width: 100%;
+  height: 100%;
+}
+h1{
+  color: slategrey;
+}
+.main-container{
+  text-align: center;
+  top: 5em;
+  margin: 5em auto auto auto;
+  width: 90%;
+  height: 40em;
+  border-style: solid;
+  border-color: skyblue;
+  border-radius: 10px;
+}
+.login input{
+  display: block;
+  margin: 10px auto auto auto;
+}
+#go{
+  cursor: pointer;
+  height: 5em;
+  width: 5em;
+  border-radius: 50%;
+  border-style: solid;
+  background-color: skyblue;
+  color: white;
+}
+.container-list {
+  border: 2px solid #ccc;
+  width: 29em;
+  height: 20em;
+  overflow-y: scroll;
+  margin: 18px auto 2em 5em;
+  text-align: left;
+  font-size: medium;
+  display: inline-block;
+  float: left;
+}
+.container-message{
+  display: inline-block;
+  float: right;
+  margin: 17px 6em auto auto;
+}
+.container-message input[name="mail-subject"]{
+  display: block;
+  height: 2em;
+    width: 40em;
+}
+.container-message input[name="mail-header"]{
+  display: block;
+  height: 2em;
+  width: 40em;
+  margin: 1em 0px;
+}
+.container-message input[name="mail-body-image"]{
+  display: block;
+  margin-bottom: 10px;
+}
+.container-message input[name="mail-body-image2"]{
+  display: block;
+  margin-bottom: 10px;
+}
+.container-message input[name="mail-body-image3"]{
+  display: block;
+  margin-bottom: 10px;
+}
+.container-message input[name="mail-body-image4"]{
+  display: block;
+  margin-bottom: 10px;
+}
+.container input{
+  height: 3em;
+  width: 16em;
+}
+.container-list input{
+  cursor: pointer;
+}
+.mailer{
+  height: 100%;
+}
+#select_all{
+  float: left;
+  display: inline-block;
+  margin-left: 22em;
+}
+.toggle{
+  display: inline-block;
+  float: left;
+  margin: 0px;
+}
+.send-email{
+  display: block;
+  height: 5em;
+  width: 10em;
+  border-radius: 5px;
+  z-index: 9;
+  border-style: none;
+  background-color: skyblue;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+</style>
+<body>
+  <div class="main-container">
+    <h1>Nueva Casa RD Dashboard</h1>
+    <div class="container">
+      <input id="username" type="text" name="username" value="" placeholder="facebook username">
+      <button id="go" type="button" name="go">GO!</button>
+    </div>
+    <input id="select_all" type="checkbox" onClick="toggle(this)" /> <p class="toggle">Toggle All</p>
+    <br/>
+    <div class="mailer">
+      <div class="container-list">
+        <br>
+      </div>
+      <div class="container-message">
+        <input type="text" name="mail-subject" value="" placeholder="Subject here">
+        <input type="text" name="mail-header" value="" placeholder="Body header here">
+        <textarea name="email-body" rows="12" cols="88" placeholder="Email body here"></textarea>
+        <input type="file" name="mail-body-image" accept="image/*">
+        <input type="file" name="mail-body-image2" accept="image/*">
+        <input type="file" name="mail-body-image3" accept="image/*">
+        <input type="file" name="mail-body-image4" accept="image/*">
+        <button class="send-email" type="button" name="send-email">Send Email</button>
+      </div>
+    </div>
+
+  </div>
+</body>
+<script type = "text/javascript" language = "javascript">
+
+$("#go").click(function(event){
+  if ($("#username").val().length > 0) {
+
+    var body = new FormData,
+    username = $("#username").val();
+    body.append("target_username", username);
+    $.ajax({
+      url: "/dashboard",
+      method: "POST",
+      data: body,
+      contentType: false,
+      dataType: "json",
+      processData: false,
+      success: function(t) {
+        console.log(t);
+        populateList(t);
+      },
+      error: function(t) {
+        console.log(t);
+      }
+    })
+
+  }
+});
+
+function populateList(objects){
+  var users = Array.from(new Set(objects.users));
+  for(var i=0, n=users.length;i<n;i++) {
+    var user = users[i]
+    var valueObject = '{'
+    +'"name" : "'+user.name+'",'
+    +'"email"  : "'+user.email+'"'
+    +'}';
+    $( ".container-list" ).append( "<input id='"+i+"' type='checkbox' name='userbox' value="+valueObject+"/> "+user.name+", "+user.email+" <br />" );
+  }
+};
+
+function toggle(source) {
+  checkboxes = document.getElementsByName('userbox');
+  for(var i=0, n=checkboxes.length;i<n;i++) {
+    checkboxes[i].checked = source.checked;
+  }
+}
+var input = $("input[name='mail-body-image']");
+var input2 = $("input[name='mail-body-image2']");
+var input3 = $("input[name='mail-body-image3']");
+var input4 = $("input[name='mail-body-image4']");
+
+input.change(function() {
+  alert(this.value);
+});
+input2.change(function() {
+  alert(this.value);
+});
+input3.change(function() {
+  alert(this.value);
+});
+input4.change(function() {
+  alert(this.value);
+});
+
+</script>
+</html>
