@@ -51,7 +51,7 @@ h1{
 .container-message input[name="mail-subject"]{
   display: block;
   height: 2em;
-    width: 40em;
+  width: 40em;
 }
 .container-message input[name="mail-header"]{
   display: block;
@@ -107,16 +107,36 @@ h1{
   font-size: 14px;
   cursor: pointer;
 }
+.loader {
+  border: 16px solid #f3f3f3;
+  border-top: 16px solid #3498db;
+  border-radius: 50%;
+  width: 4em;
+  height: 4em;
+  animation: spin 2s linear infinite;
+  position: absolute;
+  margin: 60px 46px;
+  display: none;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+strong{
+  color: red;
+}
 
 </style>
 <body>
   <div class="main-container">
+    <div class="loader"></div>
     <h1>Nueva Casa RD Dashboard</h1>
     <div class="container">
       <input id="username" type="text" name="username" value="" placeholder="facebook username">
       <button id="go" type="button" name="go">GO!</button>
     </div>
-    <input id="select_all" type="checkbox" onClick="toggle(this)" /> <p class="toggle">Toggle All</p>
+    <input id="select_all" type="checkbox" onClick="toggle(this)" /> <p class="toggle">Toggle All (<strong class="count">0</strong>)</p>
     <br/>
     <div class="mailer">
       <div class="container-list">
@@ -139,6 +159,7 @@ h1{
 <script type = "text/javascript" language = "javascript">
 
 $("#go").click(function(event){
+  $(".loader").css("display","inline-grid");
   if ($("#username").val().length > 0) {
 
     var body = new FormData,
@@ -154,17 +175,22 @@ $("#go").click(function(event){
       success: function(t) {
         console.log(t);
         populateList(t);
+        $(".loader").css("display","none");
       },
       error: function(t) {
         console.log(t);
+        $(".loader").css("display","none");
       }
     })
 
+  }else{
+    $(".loader").css("display","none");
   }
 });
 
 function populateList(objects){
   var users = Array.from(new Set(objects.users));
+  $(".count").text(""+users.length+"");
   for(var i=0, n=users.length;i<n;i++) {
     var user = users[i]
     var valueObject = '{'

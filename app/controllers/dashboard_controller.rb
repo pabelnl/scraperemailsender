@@ -11,6 +11,8 @@ class DashboardController < ApplicationController
 
   def get_data_from_feed
     target_username = dashboard_params[:target_username] || ""
+    count = 1
+    current_page = ""
     # Init Koala for facebook api
     @array = Array.new
     @graph = Koala::Facebook::API.new()
@@ -21,41 +23,72 @@ class DashboardController < ApplicationController
       puts "### Username = "+target_username
       # @graph.get_connection('171572419565247', 'posts')
       target_feed = @graph.get_connections(get_userid_from_string(target_username), 'posts', fields: "message,id,created_time,comments.fields(comments.fields(from,message),message,from),from", limit: 100)
-
+      current_page = target_feed
       if not target_feed == nil and not target_feed == ""
         puts "### Iterating feed posts "
-        target_feed.each do |post|
-          if post["comments"]
-            post["comments"]["data"].each do |data|
-              email_address = get_email_from_string(data["message"])
-              if not email_address.first == "" and not email_address.first.nil?
-                tempHash = Hash.new
-                if not data["from"]["name"] == nil and not data["from"]["name"] == ""
-                  tempHash["name"] = data["from"]["name"]
-                  puts "### Commentator name = "+tempHash["name"]
-                end
-                tempHash["email"] = email_address.first || ""
-                puts "### Commentator email address = "+ tempHash["email"]
-                @array.push(tempHash)
-              else
-                puts "### Comment doesn't have an email, skipping"
-              end
+        posts_loop(target_feed)
+        #Check for other result page
+        while count <= 4
+          if not current_page.nil?
+            next_page = current_page.next_page
+            current_page = next_page
+            if not next_page == nil and not next_page == ""
+              puts "### Iterating Next page for Feed posts "
+              puts "### PAGE "+count.to_s
+              posts_loop(target_feed)
+            else
+              puts "### No more feed posts"
             end
           else
-            puts "### Post doesn't have comments"
+            puts "### No more feed posts"
           end
+          count = count + 1
         end
         # We clean the array from duplicates
         unique = @array.uniq
+        puts "### Cleaning up the results"
         # We return a json with the array
         render json: {users: unique}, status: 200
+      else
+        puts "### No feed posts"
       end
-
+    else
+      puts "### No username given"
     end
   end
 
-  def method_name
+  def posts_loop(target_feed)
+      target_feed.each do |post|
+        post_id = post["id"]
+        if post["comments"]
+          comments = @graph.get_connections(post_id, 'comments', limit: 300)
+          puts "### Getting post = "+post_id.to_s+"'s comments"
+          if not comments.nil? and comments.count > 0
+            comments_loop(comments)
+          end
+        else
+          puts "### Post doesn't have comments"
+        end
+      end
 
+  end
+
+  def comments_loop(comments)
+    comments.each do |data|
+      email_address = get_email_from_string(data["message"])
+      if not email_address.first == "" and not email_address.first.nil?
+        tempHash = Hash.new
+        if not data["from"]["name"] == nil and not data["from"]["name"] == ""
+          tempHash["name"] = data["from"]["name"]
+          puts "### Commentator name = "+tempHash["name"]
+        end
+        tempHash["email"] = email_address.first || ""
+        puts "### Commentator email address = "+ tempHash["email"]
+        @array.push(tempHash)
+      else
+        puts "### Comment doesn't have an email, skipping"
+      end
+    end
   end
 
   def get_userid_from_string(string)
